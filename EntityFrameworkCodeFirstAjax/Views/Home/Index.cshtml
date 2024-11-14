@@ -1,0 +1,369 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+
+@model List<Category>
+<table class="table table-bordered table-hover table-striped">
+    <tr>
+        <th>No</th>
+        <th>Adı</th>
+        <th>Açıklama</th>
+        <th>İşlemler</th>
+        <th><button type="button" class="btn btn-success" id="btnKategoriModalAc">Ekle</button></th>
+    </tr>
+    <tbody id="kategoritable">
+        @foreach (Category item in Model)
+        {
+            <tr>
+                <td>@item.CategoryId</td>
+                <td><a href="/Product/Products/@item.CategoryId">@item.CategoryName</a></td>
+                <td>@item.Description</td>
+                <td><input class="btn btn-primary btnDuzenle" catid="@item.CategoryId" type="button" value="Düzenle" /></td>
+                <td><input class="btn btn-danger btnSil" catid="@item.CategoryId" type="button" value="Sil" /></td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- MODAL Ekle-->
+
+<div class="modal fade" id="ModalAc" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Kategori Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Kategori Adı</label>
+                <input class="form-control" id="CategoryName" name="CategoryName" type="text" />
+                <label class="form-label">Açıklama</label>
+                <textarea class="form-control" id="Description" name="Description" rows="5"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" id="btnKategoriEkle" class="btn btn-primary">Ekle</button>>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL Duzenle-->
+
+<div class="modal fade" id="ModalDuzenleAc" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Kategori Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input class="form-control" id="ECategoryId" name="CategoryId" type="hidden" />
+                <label class="form-label">Kategori Adı</label>
+                <input class="form-control" id="ECategoryName" name="CategoryName" type="text" />
+                <label class="form-label">Açıklama</label>
+                <textarea class="form-control" id="EDescription" name="Description" rows="5"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" id="btnKategoriGuncelle" class="btn btn-primary">Güncelle</button>>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+            $("#btnKategoriModalAc").click(function () {
+                $("#ModalAc").modal("show");
+
+            });
+            $("#btnKategoriEkle").click(function () {
+
+                var kategori = {
+                    CategoryName: $("#CategoryName").val(),
+                    Description: $("#Description").val()
+
+                }
+
+
+                $.ajax({
+                    url: "/Category/Add",
+                    method: "post",
+                    dataType: "json",
+                    data: { cat: kategori },
+                    success: function (r) {
+
+                        if (r.result) {
+
+
+                            var table = "";
+
+                            for (var i = 0; i < r.kategorilistesi.length; i++) {
+
+                                table += "<tr><td>" + r.kategorilistesi[i].categoryId + "</td>";
+                                table += "<td><a href='/Product/Products/" + r.kategorilistesi[i].CategoryId + "'>" + r.kategorilistesi[i].categoryName + "</a></td>";
+                                table += "<td>" + r.kategorilistesi[i].description + "</td>";
+                                table += "<td><input class='btn btn-primary btnDuzenle' catid='" + r.kategorilistesi[i].categoryId + "' type='button' value='Düzenle' /></td>";
+                                table += "<td><input class='btn btn-danger btnSil' catid='" + r.kategorilistesi[i].categoryId + "' type='button' value='Sil' /></td></tr>";
+
+
+                            }
+
+                            r.kategorilistesi
+
+                            $("#kategoritable").html(table);
+                            $("#ModalAc").modal("hide");
+
+
+
+                            Swal.fire({
+                                title: "İşlem Başarılı!",
+                                text: r.mesaj,
+                                icon: "success"
+                            });
+                        }
+                        else {
+
+                        }
+
+                    },
+                    error: function () {
+
+                    }
+
+
+                })
+
+            });
+
+            $("#kategoritable").on("click", ".btnDuzenle", function () {
+
+                var id = $(this).attr("catid");
+
+
+                $.ajax({
+                    url: "/Category/GetCategory",
+                    method: "post",
+                    dataType: "json",
+                    data: { id: id },
+                    success: function (r) {
+
+                        if (r.result) {
+
+                            $("#ECategoryId").val(r.kategori.categoryId);
+                            $("#ECategoryName").val(r.kategori.categoryName);
+                            $("#EDescription").val(r.kategori.description);
+
+
+                            $("#ModalDuzenleAc").modal("show");
+
+
+
+
+                        }
+                        else {
+
+                        }
+
+                    },
+                    error: function () {
+
+                    }
+
+
+                })
+
+
+
+
+
+            });
+
+            $("#btnKategoriGuncelle").click(function () {
+
+                var kategori = {
+                    CategoryId: $("#ECategoryId").val(),
+                    CategoryName: $("#ECategoryName").val(),
+                    Description: $("#EDescription").val()
+
+                }
+
+
+                $.ajax({
+                    url: "/Category/Update",
+                    method: "post",
+                    dataType: "json",
+                    data: { cat: kategori },
+                    success: function (r) {
+
+                        if (r.result) {
+
+
+                            var table = "";
+
+                            for (var i = 0; i < r.kategorilistesi.length; i++) {
+
+                                table += "<tr><td>" + r.kategorilistesi[i].categoryId + "</td>";
+                                table += "<td><a href='/Product/Products/" + r.kategorilistesi[i].CategoryId + "'>" + r.kategorilistesi[i].categoryName + "</a></td>";
+                                table += "<td>" + r.kategorilistesi[i].description + "</td>";
+                                table += "<td><input class='btn btn-primary btnDuzenle' catid='" + r.kategorilistesi[i].categoryId + "' type='button' value='Düzenle' /></td>";
+                                table += "<td><input class='btn btn-danger btnSil' catid='" + r.kategorilistesi[i].categoryId + "' type='button' value='Sil' /></td></tr>";
+
+
+                            }
+
+                            r.kategorilistesi
+
+                            $("#kategoritable").html(table);
+                            $("#ModalDuzenleAc").modal("hide");
+
+
+
+                            Swal.fire({
+                                title: "İşlem Başarılı!",
+                                text: r.mesaj,
+                                icon: "success"
+                            });
+                        }
+                        else {
+
+                        }
+
+                    },
+                    error: function () {
+
+                    }
+
+
+                })
+
+            });
+
+            $("#kategoritable").on("click", ".btnSil", function () {
+
+
+
+                Swal.fire({
+                    title: "Dikkat Kategori Silenecek!?",
+                    text: "Emin misin?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "SİL",
+                    cancelButtonText: "Vazgeç"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        var id = $(this).attr("catid");
+
+
+                        $.ajax({
+                            url: "/Category/Sil",
+                            method: "post",
+                            dataType: "json",
+                            data: { id: id },
+                            success: function (r) {
+
+                                if (r.result) {
+
+
+                                    var table = "";
+
+                                    for (var i = 0; i < r.kategorilistesi.length; i++) {
+
+                                        table += "<tr><td>" + r.kategorilistesi[i].categoryId + "</td>";
+                                        table += "<td><a href='/Product/Products/" + r.kategorilistesi[i].CategoryId + "'>" + r.kategorilistesi[i].categoryName + "</a></td>";
+                                        table += "<td>" + r.kategorilistesi[i].description + "</td>";
+                                        table += "<td><input class='btn btn-primary btnDuzenle' catid='" + r.kategorilistesi[i].categoryId + "' type='button' value='Düzenle' /></td>";
+                                        table += "<td><input class='btn btn-danger btnSil' catid='" + r.kategorilistesi[i].categoryId + "' type='button' value='Sil' /></td></tr>";
+
+
+                                    }
+
+                                    r.kategorilistesi
+
+                                    $("#kategoritable").html(table);
+
+
+
+
+
+
+                                    Swal.fire({
+                                        title: "İşlem Başarılı!",
+                                        text: "Kategori Başarıyla Silindi!",
+                                        icon: "success"
+                                    });
+
+
+
+
+                                }
+                                else {
+
+                                }
+
+                            },
+                            error: function () {
+
+                            }
+
+
+                        })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    }
+                });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            });
+
+            function() {
+                
+            }
+        });
+
+
+    </script>
+
+
+}
